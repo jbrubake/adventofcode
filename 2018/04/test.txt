@@ -1,0 +1,9 @@
+[1234-00-00 00:00] Guard #1 begins shift
+[1234-00-00 00:10] falls asleep
+[1234-00-00 00:20] wakes up
+[1234-00-00 00:30] Guard #2 begins shift
+[1234-00-00 00:40] falls asleep
+[1234-00-00 00:50] wakes up
+[1234-00-10 00:00] Guard #1 begins shift
+[1234-00-10 00:19] falls asleep
+[1234-00-10 00:20] wakes up

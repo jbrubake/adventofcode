@@ -1,0 +1,39 @@
+#!/bin/sh
+
+n=0
+a=
+b=
+c=
+oldsum=
+
+while read depth; do
+    if [ -z "$a" ]; then
+        a=$depth
+        continue
+    elif [ -z "$b" ]; then
+        b=$depth
+        continue
+    elif [ -z "$c" ]; then
+        c=$depth
+    else
+        a=$b
+        b=$c
+        c=$depth
+    fi
+
+    sum=$((a+b+c))
+    test -z "$oldsum" && oldsum=$sum
+
+    printf "%s sum: %s\t[%s %s %s]\t" $depth $sum $a $b $c
+
+    if [ "$sum" -gt "$oldsum" ]; then
+        echo "increased"
+        n=$((n+1))
+    else
+        echo "decreased"
+    fi
+
+    oldsum=$sum
+done
+
+echo $n

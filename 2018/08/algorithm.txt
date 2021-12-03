@@ -1,0 +1,24 @@
+hash nodes
+    key index
+        hash header
+            key value = calculated value
+            key kids = index into nodes
+
+sub process_license (sum, numbers)
+    Set num_kids = shift numbers
+    Set num_data = shift numbers
+
+    for kid in num_kids
+        push index to next kid
+        numbers = process_license numbers
+
+    for data in num_data
+        data = shift numbers
+        push metadata onto node
+        set default value = 0
+
+    return numbers
+
+sub calculate_root_value
+    
+

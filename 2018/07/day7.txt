@@ -1,0 +1,143 @@
+#!/opt/perl/bin/perl
+
+use 5.026;
+
+use strict;
+use warnings;
+no  warnings 'syntax';
+
+use experimental 'signatures';
+
+#
+# Read the input and map them to points.
+#
+my $input = "input";
+open my $fh, "<", $input or die "Failed to open $input: $!";
+
+my $BASE_TIME = 60;
+my $ELVES     =  5;
+
+my %dependencies;
+
+while (<$fh>) {
+    /^Step (?<requirement>\p{Lu}) must be finished before (?#
+      )step (?<target>\p{Lu}) can begin\.$/ or die "Failed to parse $_";
+
+    $dependencies {$+ {target}} {$+ {requirement}} = 1;
+    $dependencies {$+ {requirement}} ||= {};
+}
+
+#
+# For part 2, we need a copy of the dependencies, as we're
+# destructing %dependencies.
+#
+my %copy;
+foreach my $target (keys %dependencies) {
+    $copy {$target} = {};
+    foreach my $requirement (keys %{$dependencies {$target}}) {
+        $copy {$target} {$requirement} = 1;
+    }
+}
+
+
+
+#
+# Part 1
+#
+{
+    my @order;
+
+    while (%dependencies) {
+        #
+        # Find the item which should be processed. For all items which
+        # have no dependencies left, pick the first in alphabetical order.
+        #
+        my ($todo) = sort grep {!keys %{$dependencies {$_}}}
+                          keys %dependencies;
+
+        #
+        # Process them
+        #
+        push @order => $todo;
+
+        #
+        # Remove it from the list.
+        #
+        delete $dependencies {$todo};
+
+        #
+        # Since it's done, remove it as requirements for other items.
+        #
+        delete $dependencies {$_} {$todo} for keys %dependencies;
+    }
+
+
+    say "Part 1: ", @order;
+}
+
+
+#
+# Part 2
+#
+{
+    my %dependencies = %copy;
+    my @order;
+    my %done_at;              # List of items which will be ready at time X.
+    my $now = 0;              # "Current" time.
+    my $elves_free = $ELVES;  # Number of elves with no task.
+
+    while (1) {
+        #
+        # Free up any jobs which are done.
+        #
+        foreach my $done_item (@{$done_at {$now} || []}) {
+            delete $dependencies {$_} {$done_item} for keys %dependencies;
+            $elves_free ++;
+        }
+        #
+        # Processed the done items, remove them from list.
+        #
+        delete $done_at {$now};
+
+        #
+        # Are we done?
+        #
+        last unless %dependencies;
+ 
+        #
+        # While we have a free worker, and an item which may be
+        # processed, assign a job, and mark when it's done.
+        #
+        while ($elves_free) {
+            my ($todo) = sort grep {!keys %{$dependencies {$_}}}
+                              keys %dependencies;
+            last unless $todo;
+            #
+            # One less free worker
+            #
+            $elves_free --;
+
+            #
+            # Remove it from the set of things to do
+            #
+            delete $dependencies {$todo};
+    
+            #
+            # Mark the time the work is done.
+            #
+            my $ready_at = $now + $BASE_TIME + ord ($todo) - ord ('A') + 1;
+            push @{$done_at {$ready_at}} => $todo;
+        }
+        
+        #
+        # Set time till next moment an elf is ready.
+        #
+        my ($next) = sort {$a <=> $b} keys %done_at;
+        $now = $next;
+    }
+
+    say "Part 2: $now";
+}
+         
+        
+__END__

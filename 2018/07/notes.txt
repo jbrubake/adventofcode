@@ -1,0 +1,17 @@
+START
+
+Get next line of steps
+
+for each step in steps
+    if only one step
+        Increase worker B's time by (A+step-B)
+        Increase worker A's time
+    Else
+        Assign step to worker with shortest time
+        Increase worker time
+done
+Set Worker B time equal to Worker A time
+
+
+LOOP
+Print max of worker times

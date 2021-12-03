@@ -1,0 +1,15 @@
+While tasks exist
+
+For each worker
+    Reduce work time by 1 sec if worker has a task
+    If work time = 0
+        Mark task as completed
+        Delete task from list
+        Mark worker as free
+        Get list of possible tasks
+        Reduce list to only tasks not already assigned
+        Assign first task to worker
+        Set work time
+Increase total time by 1
+
+Loop
