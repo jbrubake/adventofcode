@@ -2,17 +2,6 @@
 
 function abs(v) { return v < 0 ? -v : v }
 
-function get_fuel(d,    f, total) {
-    f = 1
-    total = 0
-    for(i = 1; i <= d; i++) {
-        total += f
-        f++
-    }
-
-    return total
-}
-
 BEGIN { FS = "," }
 
 {
@@ -22,7 +11,7 @@ BEGIN { FS = "," }
     right = data[n]
 
     for(d = 1; d <= abs(right - left); d++) {
-        fuel_tbl[d] = get_fuel(d)
+        fuel_tbl[d] = fuel_tbl[d-1] + d
     }
 
     # Check all positions
