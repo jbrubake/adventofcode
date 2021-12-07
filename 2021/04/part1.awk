@@ -1,0 +1,82 @@
+#!/usr/bin/awk -f
+
+function print_board(board,         i) {
+    for(i = 1; i <= SIZE * SIZE; i++) {
+        printf("%s:", board[i])
+    }
+    print "\n"
+}
+
+function score_board(board,    i, score) {
+    for(i = 1; i <= SIZE * SIZE; i++) {
+        score += board[i]
+    }
+    return score
+}
+
+function check_for_winner(board,     x, y, count) {
+    # Check for row winner
+    count = 0
+    for(x = 0; x < SIZE; x++) {
+        for(y = 0; y < SIZE; y++) {
+            if(board[x*SIZE+y+1] == "X") count++
+        }
+        if (count == SIZE) {
+            return score_board(board)
+        } else {
+            count = 0
+        }
+    }
+
+    # Check for column winner
+    count = 0
+    for(y = 0; y < SIZE; y++) {
+        for(x = 0; x < SIZE; x++) {
+            if(board[x*SIZE+y+1] == "X") count++
+        }
+        if (count == SIZE) {
+            return score_board(board)
+        } else {
+            count = 0
+        }
+    }
+
+    return -1
+}
+
+BEGIN {
+    SIZE = 5
+}
+
+NR == 1 {
+    oldfs = FS
+    FS = ","
+    num_draws = split($0, draw)
+    FS = oldfs
+    RS = "\n\n"
+    next
+}
+
+{
+    split($0, board)
+
+    for(i = 1; i <= num_draws; i++) {
+        for(j = 1; j <= SIZE * SIZE; j++) {
+            if(board[j] == draw[i]) {
+                board[j] = "X"
+            }
+        }
+        score = check_for_winner(board)
+        if(score != -1) {
+            solutions[i] = score * draw[i]
+            break
+        }
+    }
+    board_index++
+}
+
+END {
+    asorti(solutions, winner)
+    printf("Score = %s\n", solutions[winner[1]])
+}
+
