@@ -76,7 +76,8 @@ NR == 1 {
 }
 
 END {
-    asorti(solutions, winner)
-    printf("Score = %s\n", solutions[winner[1]])
+    n = asorti(solutions, winner)
+    printf("Part 1 score = %s\n", solutions[winner[1]])
+    printf("Part 2 score = %s\n", solutions[winner[n]])
 }
 
