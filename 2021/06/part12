@@ -1,0 +1,50 @@
+#!/bin/bash
+
+SPAWN_TM=7
+MATURE_TM=2
+CHILDREN=0
+
+declare -a POPULATION
+
+
+create_children()
+{
+    local parents=$1
+    local generation=$2
+    local children=0
+
+    generation=$((generation + MATURE_TM + SPAWN_TM))
+
+    for i in $(seq $generation $SPAWN_TM $GENERATIONS); do
+        POPULATION[$i]=$((POPULATION[$i] + parents))
+        children=$((children + parents))
+    done
+
+    CHILDREN=$children
+}
+
+GENERATIONS="$1"
+# Initialize population
+for i in $(seq 1 $GENERATIONS); do
+    POPULATION[$i]=0
+done
+
+# Not sure how to process the single line easier
+read line
+for age in ${line//,/ }; do
+    g=$((-(SPAWN_TM + MATURE_TME - age + 1)))
+    create_children 1 $g
+    spawned=$CHILDREN
+    total=$((total + spawned + 1))
+done
+
+for i in $(seq 1 $GENERATIONS); do
+    if [ "${POPULATION[$i]}" -eq 0 ]; then
+        continue
+    fi
+    create_children ${POPULATION[$i]} $i
+    spawned=$CHILDREN
+    total=$((total + spawned))
+done
+
+printf "Total fish = %s\n" $total
