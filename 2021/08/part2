@@ -1,5 +1,15 @@
 #!/usr/bin/awk -f
 
+# Return the character that differs between s1 and s2
+function diff(s1, s2,    i) {
+    for(i = 1; i <= length(s1); i++) {
+        c1 = substr(s1, i, 1)
+        c2 = substr(s2, i, 1)
+        if(c1 != c2)
+            return c2
+    }
+}
+
 function get_value(s) {
     if (s == ONE)   return 1
     if (s == TWO)   return 2
@@ -19,6 +29,9 @@ function decode(s, k,    i, n, tbl) {
     # is decoded to "a" (1st position in k and tbl)
     tbl = "abcdefg"
 
+    # Remove the blanks
+    gsub(/ /, "", s)
+
     # Swap characters in s based on the equivalence
     # between k and tbl
     for(i = 1; i <= length(s); i++) {
@@ -29,6 +42,9 @@ function decode(s, k,    i, n, tbl) {
     # Properly format the decoded string
     s = sort_code(s)
 
+    # Remove the blanks
+    gsub(/ /, "", s)
+
     return s
 }
 
@@ -38,6 +54,7 @@ function cmp_len(i1, s1, i2, s2) {
 }
 
 # Convert coded strings to sorted 7-character strings
+# with blanks embedded (these are needed so diff() works)
 function sort_code(s) {
     r["a"] = " "
     r["b"] = " "
@@ -56,8 +73,6 @@ function sort_code(s) {
     if (match(s, /g/)) r["g"] = "g"
    
     s = r["a"] r["b"] r["c"] r["d"] r["e"] r["f"] r["g"]
-    # Remove the blanks
-    gsub(/ /, "", s)
 
     return s
 }
@@ -122,9 +137,24 @@ BEGIN {
     # each one based on the digit it must be or its length
     asort(digits, digits, "cmp_len")
 
+    for (i in digits)
+        digits[i] = sort_code(digits[i])
+
+    # The difference between the ONE and the SEVEN
+    # always decodes to "a"
+    a = diff(digits[I_ONE], digits[I_SEVEN])
+    if (a == "a") I = 1 + 720 * 0
+    else if (a == "b") I = 1 + 720 * 1
+    else if (a == "c") I = 1 + 720 * 2
+    else if (a == "d") I = 1 + 720 * 3
+    else if (a == "e") I = 1 + 720 * 4
+    else if (a == "f") I = 1 + 720 * 5
+    else if (a == "g") I = 1 + 720 * 6
+
     # Brute-force each key, skipping to the next as soon as
     # it is found to be invalid
-    for (i in KEYS) {
+    # for (i in KEYS) {
+    for (i = I; i <= I + 720; i++) {
         # These are easy because they have a unique number of segments
         if (decode(digits[I_ONE],   KEYS[i]) != ONE)   continue
         if (decode(digits[I_SEVEN], KEYS[i]) != SEVEN) continue
@@ -166,6 +196,7 @@ BEGIN {
 
     # Add to the answer
     answer += value
+    # exit
 }
 
 END { printf("Answer = %d\n", answer) }
