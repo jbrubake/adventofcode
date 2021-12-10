@@ -1,0 +1,84 @@
+Segments used by each number
+0 6 abc efg
+1 2   c  f
+2 5 a cde g
+3 5 a cd fg
+4 4  bcd f
+5 5 ab d fg
+6 6 ab defg
+7 3 a c  f
+8 7 abcdefg
+9 6 abcd fg
+
+Numbers that use each segment
+a 0 23 56789
+b 0   456 89
+c 01234  789
+d   23456 89
+e 0 2   6 8
+f 01 3456789
+g 0 23 56 89
+
+Algorithm:
+- the segment that differs between 1 and 7 MUST = a
+    d = A
+- the 2-seg # MUST = cf
+    ab = 1 = cf
+- the 4-seg # will have 2 segs left which MUST = bd
+    ef = 2 = bd
+- there will be a 5-seg # with 1 seg left which MUST = g, the # MUST = 5 and the 1 MUST = f
+    c = G
+    b = 1 = F
+- this makes the other 1 = C
+    a = 1 = C
+- the unmarked # in the 8 (6-segs) MUST = e
+    g = E
+- there will be 2 5-seg #s with a single 2 which MUST = d
+    f = 2 = D
+- the other 2 MUST = b
+    e = 2 = B
+
+Solve: acedgfb cdfbe gcdfa fbcad dab cefabd cdfgeb eafb cagedb ab | cdfeb fcadb cdfeb cdbaf
+
+1   cf
+2   acdeg
+3   acdfg
+4   bcdf
+5   abdfg
+6   abdefg
+7   acf
+8   abdefgg
+9   abcdfg
+0   abcefg
+
+1   ab
+    CF     
+2   acdfg
+    CGADE  
+3   abcdf
+    CFGAD  
+4   abef
+    CFBD   
+5   bcdef
+    FGABD  
+6   bcdefg
+    FGABDE 
+7   abd
+    CFA
+8   abcdefg
+    CFGABDE
+9   abcdef
+    CFGABD 
+0   abcdeg
+    CFGABE
+
+d = A
+e = B
+a = C
+f = D
+g = E
+b = F
+c = G
+
+Key: deafgbc
+
