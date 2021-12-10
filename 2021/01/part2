@@ -7,6 +7,18 @@ c=
 oldsum=
 
 while read depth; do
+    if [ -z "$depth" ]; then
+        continue
+    fi
+
+    # Part 1: count number of increases
+    test -z "$old" && old=$depth
+    if [ "$depth" -gt "$old" ]; then
+        n1=$((n1+1))
+    fi
+    old=$depth
+
+    # Part 2: count number of increases in sliding window
     if [ -z "$a" ]; then
         a=$depth
         continue
@@ -24,16 +36,12 @@ while read depth; do
     sum=$((a+b+c))
     test -z "$oldsum" && oldsum=$sum
 
-    printf "%s sum: %s\t[%s %s %s]\t" $depth $sum $a $b $c
-
     if [ "$sum" -gt "$oldsum" ]; then
-        echo "increased"
-        n=$((n+1))
-    else
-        echo "decreased"
+        n2=$((n2+1))
     fi
 
     oldsum=$sum
 done
 
-echo $n
+printf "Part 1: %s\n" "$n1"
+printf "Part 2: %s\n" "$n2"
