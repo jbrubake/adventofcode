@@ -4,20 +4,10 @@
 #include <string.h>
 
 const int BUFSZ = 5000;
-int BITS = 0;
 const int EMPTY = -1;
 const int DELETED = -2;
 
-#define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
-#define BYTE_TO_BINARY(byte)  \
-      (byte & 0x80 ? '1' : '0'), \
-  (byte & 0x40 ? '1' : '0'), \
-  (byte & 0x20 ? '1' : '0'), \
-  (byte & 0x10 ? '1' : '0'), \
-  (byte & 0x08 ? '1' : '0'), \
-  (byte & 0x04 ? '1' : '0'), \
-  (byte & 0x02 ? '1' : '0'), \
-  (byte & 0x01 ? '1' : '0') 
+int BITS = 0;
 
 int
 get_critical_value (int *data, int n)
@@ -58,17 +48,6 @@ num_records (int *data)
     return n;
 }
 
-void
-print_array (int *data)
-{
-    for (int *p = data; *p != EMPTY; p++)
-    {
-        if (*p == DELETED)
-            continue;
-        printf (BYTE_TO_BINARY_PATTERN"\n", BYTE_TO_BINARY(*p));
-    }
-}
-
 int
 main (int argc, char **argv)
 {
@@ -77,35 +56,68 @@ main (int argc, char **argv)
     memset (oxygen, EMPTY, BUFSZ);
     int *co2 = malloc (BUFSZ * sizeof(int));
     memset (co2, EMPTY, BUFSZ);
+    unsigned int *gamma = malloc (BUFSZ * sizeof(int));
+    memset (gamma, EMPTY, BUFSZ);
 
     /* Read input into two lists: one for CO2 and one for O2 */
     char *line = NULL;
     size_t len = 0;
     ssize_t read;
-    for (int *p = oxygen, *j = co2; (read = getline (&line, &len, stdin)) != EMPTY; p++, j++)
+    int n = 0; /* count total records */
+    for (int *p = oxygen, *j = co2; (read = getline (&line, &len, stdin)) != EMPTY; p++, j++, n++)
     {
         line[strlen(line)-1] = '\0'; /* Delete trailing newline */
-        if (BITS == 0) /* How many bits are in the data? */
+        if (BITS == 0) {
+            /* How many bits are in the data? */
             BITS = strlen(line);
+            /* Initialize gamma to 0 */
+            memset (gamma, 0, BITS * sizeof (unsigned int));
+        }
 
         /* Convert to a number */
         *p = strtol (line, NULL, 2);
         /* Copy to the other list */
         *j = *p;
+
+        /* Calculate gamma */
+        unsigned int *gp = gamma;
+        for (int i = 0; i < BITS; i++)
+        {
+            *gp += (*p & (1 << i)) >> i;
+            gp++;
+        }
     }
     free (line);
 
-    /* print_array (oxygen); */
+    /* Calculate Part 1 */
+    double g = 0;
+    double e = 0;
+    for (unsigned int *gp = gamma, i = 0; *gp != EMPTY; gp++, i++)
+    {
+        /* printf ("%d ", *gp); */
+        if (*gp < (n/2))
+        {
+            /* printf ("(gp = 0) "); */
+            *gp = 0;
+            e += pow (2, (double)i);
+        }
+        else
+        {
+            /* printf ("(gp = 1) "); */
+            *gp = 1;
+            g += pow (2, (double)i);
+        }
 
+    }
+        /* printf ("\n"); */
+    printf ("Part 1: %u\n", (unsigned int)g * (unsigned int)e);
+
+    /* Calculate Part 2 */
     for (int i = BITS-1; i >= 0; i--)
     {
         /* Get the current critical bit */
         int c1 = get_critical_value (oxygen, i);
-        printf ("oxygen bit %d critical value is %d\n", i, c1);
-        printf (" starting records: %d\n", num_records (oxygen));
         int c2 = !get_critical_value (co2, i);
-        printf ("co2 bit %d critical value is %d\n", i, c2);
-        printf (" starting records: %d\n", num_records (co2));
 
         /* Loop through the lists and mark unneeded records */
         if (num_records (oxygen) > 1)
@@ -128,8 +140,6 @@ main (int argc, char **argv)
                     *p = DELETED;
             }
         }
-        /* printf (" ending records: %d\n", num_records (co2)); */
-        /* print_array (co2); */
     }
 
     int c = 0;
@@ -139,7 +149,6 @@ main (int argc, char **argv)
     {
         if (*p == DELETED)
             continue;
-        /* printf ("Last record = %d\n", *p); */
         o = *p;
         break;
     }
@@ -147,12 +156,11 @@ main (int argc, char **argv)
     {
         if (*p == DELETED)
             continue;
-        /* printf ("Last record = %d\n", *p); */
         c = *p;
         break;
     }
 
-    printf ("Answer = %d\n", o*c);
+    printf ("Part 2: %d\n", o*c);
 
     return 0;
 }
