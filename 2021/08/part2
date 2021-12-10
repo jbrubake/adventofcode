@@ -1,0 +1,171 @@
+#!/usr/bin/awk -f
+
+function get_value(s) {
+    if (s == ONE)   return 1
+    if (s == TWO)   return 2
+    if (s == THREE) return 3
+    if (s == FOUR)  return 4
+    if (s == FIVE)  return 5
+    if (s == SIX)   return 6
+    if (s == SEVEN) return 7
+    if (s == EIGHT) return 8
+    if (s == NINE)  return 9
+    if (s == ZERO)  return 0
+}
+
+function decode(s, k,    i, n, tbl) {
+    # The characters in k correspond to this
+    # string. E.g, k = "gfedcba" means "g" in s
+    # is decoded to "a" (1st position in k and tbl)
+    tbl = "abcdefg"
+
+    # Swap characters in s based on the equivalence
+    # between k and tbl
+    for(i = 1; i <= length(s); i++) {
+        n = index(k, substr(s, i, 1))
+        sub(substr(s, i, 1), substr(tbl, n, 1), s)
+    }
+
+    # Properly format the decoded string
+    s = sort_code(s)
+
+    return s
+}
+
+# Sort strings by length
+function cmp_len(i1, s1, i2, s2) {
+    return length(s1) - length(s2)
+}
+
+# Convert coded strings to sorted 7-character strings
+function sort_code(s) {
+    r["a"] = " "
+    r["b"] = " "
+    r["c"] = " "
+    r["d"] = " "
+    r["e"] = " "
+    r["f"] = " "
+    r["g"] = " "
+
+    if (match(s, /a/)) r["a"] = "a"
+    if (match(s, /b/)) r["b"] = "b"
+    if (match(s, /c/)) r["c"] = "c"
+    if (match(s, /d/)) r["d"] = "d"
+    if (match(s, /e/)) r["e"] = "e"
+    if (match(s, /f/)) r["f"] = "f"
+    if (match(s, /g/)) r["g"] = "g"
+   
+    s = r["a"] r["b"] r["c"] r["d"] r["e"] r["f"] r["g"]
+    # Remove the blanks
+    gsub(/ /, "", s)
+
+    return s
+}
+
+# Generate all permutations of the characters in s
+# and store them in KEYS[]
+function permute(s, st,     i, j, n, tmp) {
+    n = split(s, item,//)
+
+    if (st > n) {
+        KEYS[NUM_KEYS] = s
+        NUM_KEYS++
+        return
+    }
+
+    for (i = st; i <= n; i++) {
+        if (i != st) {
+            tmp = item[st]; item[st] = item[i]; item[i] = tmp
+            nextstr = item[1]
+            for (j = 2; j <= n; j++) nextstr = nextstr item[j]
+        } else {
+            nextstr = s
+        }
+        permute(nextstr, st+1)
+        n = split(s, item, //)
+    }
+}
+
+BEGIN {
+    NUM_KEYS = 1
+    permute("abcdefg", 1)
+
+    FS = "|"
+
+    # Real segment codes
+    ONE   = "cf"
+    TWO   = "acdeg"
+    THREE = "acdfg"
+    FOUR  = "bcdf"
+    FIVE  = "abdfg"
+    SIX   = "abdefg"
+    SEVEN = "acf"
+    EIGHT = "abcdefg"
+    NINE  = "abcdfg"
+    ZERO  = "abcefg"
+
+    # Where each coded string is stored in digits[]
+    # based on the number it must be or its length
+    I_ONE      = 1
+    I_SEVEN    = 2
+    I_FOUR     = 3
+    I_FIVE_SEG = 4; N_FIVE_SEG = I_FIVE_SEG+2
+    I_SIX_SEG  = 7; N_SIX_SEG  = I_SIX_SEG+2
+    I_EIGHT    = 10
+}
+
+{
+    split($1, digits, " ")
+    split($2, output, " ")
+
+    # Sort 10 digit input by length so we can access
+    # each one based on the digit it must be or its length
+    asort(digits, digits, "cmp_len")
+
+    # Brute-force each key, skipping to the next as soon as
+    # it is found to be invalid
+    for (i in KEYS) {
+        # These are easy because they have a unique number of segments
+        if (decode(digits[I_ONE],   KEYS[i]) != ONE)   continue
+        if (decode(digits[I_SEVEN], KEYS[i]) != SEVEN) continue
+        if (decode(digits[I_FOUR],  KEYS[i]) != FOUR)  continue
+        if (decode(digits[I_EIGHT], KEYS[i]) != EIGHT) continue
+
+        n = 0
+        for (j = I_SIX_SEG; j <= N_SIX_SEG; j++) {
+            t = decode(digits[j], KEYS[i])
+            # Two digits have 6-segments so try each one
+            if (t == NINE || t == ZERO)
+                n++
+        }
+        # If there weren't two matches, the key is invalid
+        if (n != 2) continue
+
+        n = 0
+        for (j = I_FIVE_SEG; j <= N_FIVE_SEG; j++) {
+            t = decode(digits[j], KEYS[i])
+            # There are three digits with 5-segments so we
+            # have to try each one
+            if (t == TWO || t == THREE || t == FIVE)
+                n++
+        }
+        # The logic is inverted here because it is the last check
+        # Break the loop if we found two matches as this is the
+        # correct key
+        if (n == 3) {
+            key = KEYS[i]
+            break
+        }
+    }
+
+    # Decode the four output digits and convert to a number
+    value  = 1    * int(get_value(decode(output[4], key)))
+    value += 10   * int(get_value(decode(output[3], key)))
+    value += 100  * int(get_value(decode(output[2], key)))
+    value += 1000 * int(get_value(decode(output[1], key)))
+
+    # Add to the answer
+    answer += value
+}
+
+END { printf("Answer = %d\n", answer) }
