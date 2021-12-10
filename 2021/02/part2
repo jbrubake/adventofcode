@@ -1,8 +1,11 @@
 #!/usr/bin/awk -f
 
-/^forward/ { h += $2; d += aim * $2 }
+/^forward/ { h += $2; d2 += aim * $2 }
 /^reverse/ { h -= $2 }
-/^up/      { aim -= $2 }
-/^down/    { aim += $2 }
+/^up/      { d1 -= $2; aim -= $2 }
+/^down/    { d1 += $2; aim += $2 }
 
-END { print d * h }
+END {
+    printf("Part 1: %d\n", d1 * h)
+    printf("Part 2: %d\n", d2 * h)
+}
