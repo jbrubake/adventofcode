@@ -1,0 +1,117 @@
+#!/usr/bin/awk -f
+#
+# This attempts to decode the segments by working through the
+# actual algorithm. It is not finished and likely implements
+# an incorrect version of the algorithm where I made some mistakes
+
+function cmp_length(i1, s1, i2, s2) {
+    return length(s1) - length(s2)
+}
+
+function diff(s1, s2,    i) {
+    for(i = 1; i <= SEGMENTS; i++) {
+        if(substr(s1, i, 1) != substr(s2, i, 1))
+            return i
+    }
+}
+
+function print_decode(d,    i) {
+    for(i in d)
+        printf("%s = %s\n", i, d[i])
+}
+
+function get_num_unknown(s, d,    i, n) {
+    n = 0
+    for(i = 1; i <= SEGMENTS; i++)
+        if(d[substr(s, i, 1)] == " ") n++
+
+    return n
+}
+
+function code_to_string(c) {
+    s = "       "
+    if(match(c, /a/)) s =                 "a" substr(s, 2)
+    if(match(c, /b/)) s = substr(s, 1, 1) "b" substr(s, 3)
+    if(match(c, /c/)) s = substr(s, 1, 2) "c" substr(s, 4)
+    if(match(c, /d/)) s = substr(s, 1, 3) "d" substr(s, 5)
+    if(match(c, /e/)) s = substr(s, 1, 4) "e" substr(s, 6)
+    if(match(c, /f/)) s = substr(s, 1, 5) "f" substr(s, 7)
+    if(match(c, /g/)) s = substr(s, 1, 6) "g"
+    
+    return s
+}
+
+BEGIN {
+    FS = "|"
+    DIGITS = 10
+    SEGMENTS = 7
+
+    ONE = 1
+    SEVEN = 2
+    FOUR = 3
+    EIGHT = 10
+
+    FIVE_SEG = 4
+    SIX_SEG = 7
+}
+
+{
+    decode["a"] = " "
+    decode["b"] = " "
+    decode["c"] = " "
+    decode["d"] = " "
+    decode["e"] = " "
+    decode["f"] = " "
+    decode["g"] = " "
+
+    split($1, tmp, " ")
+    asort(tmp, digits, "cmp_length")
+    split($2, output, " ")
+
+    for(i in digits) {
+        digits[i] =  code_to_string(digits[i])
+        printf("%s\n", digits[i])
+    }
+
+    printf("Step 1\n")
+    # The segment which differs between 1 and 7 is "A"
+    ret = substr(digits[SEVEN], diff(digits[ONE], digits[SEVEN]), 1)
+    decode[ret] = "a"
+    print_decode(decode)
+
+    printf("Step 2\n")
+    # Mark the segments used for 1
+    # (these will decode to "CF"
+    for(i = 1; i <= SEGMENTS; i++) {
+        d = substr(digits[ONE], i, 1)
+        if(d == " " || d == "") continue
+        decode[d] = "1"
+    }
+    print_decode(decode)
+
+    printf("Step 3\n")
+    # Mark the two unknown segments in 4
+    # (these will decode to "BD")
+    for(i = 1; i <= SEGMENTS; i++) {
+        d = substr(digits[FOUR], i, 1)
+        if(d == " ") continue
+        if(decode[d] == " ") decode[d] = "2"
+    }
+    print_decode(decode)
+
+    printf("Step 4\n")
+    # Find the 5-segment number with one unknown segment
+    # and decode that segment as "G"
+    for(i = FIVE_SEG; i <= FIVE_SEG+2; i++) {
+        if(get_num_unknown(digits[i], decode) == 1) {
+            print digits[i], get_num_unknown(digits[i], decode)
+        }
+    }
+
+    # The segment decoded as a "1" = "F"
+    # print_decode(decode)
+
+    exit
+}
+
+END { print "Sum is ", sum }
