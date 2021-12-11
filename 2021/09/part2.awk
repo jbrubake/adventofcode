@@ -79,11 +79,13 @@ END {
     for(y = 2; y < row; y++) {
         for(x = 2; x < LENGTH+2; x++) {
             if(!is_bottom(x, y)) continue
+            risk += height(x, y) + 1
             sizes[n] = find_basin_size(x, y)
             n++
         }
     }
 
+    printf("Part 1: %s\n", risk)
     last = asort(sizes)
-    print sizes[last] * sizes[last-1] * sizes[last-2]
+    printf("Part 2: %d\n", sizes[last] * sizes[last-1] * sizes[last-2])
 }
