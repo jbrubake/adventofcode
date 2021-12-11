@@ -18,20 +18,32 @@ BEGIN { FS = "," }
     for(x = left; x <= right; x++) {
         for(i = 1; i <= n; i++) {
             d = abs(data[i] - x)
-            f = fuel_tbl[d]
-            fuel[x] += f
+            fuel1[x] += d
+            fuel2[x] += fuel_tbl[d]
         }
     }
 
-    min = 0
+    min1 = 0
     for (i = 1; i <= n; i++) {
-        if (min == 0) {
-            min = fuel[i]
-        } else if (fuel[i] < min) {
-            min = fuel[i]
+        if (min1 == 0) {
+            min1 = fuel1[i]
+        } else if (fuel1[i] < min1) {
+            min1 = fuel1[i]
+        }
+    }
+
+    min2 = 0
+    for (i = 1; i <= n; i++) {
+        if (min2 == 0) {
+            min2 = fuel2[i]
+        } else if (fuel2[i] < min2) {
+            min2 = fuel2[i]
         }
     }
 }
 
-END { printf ("Min fuel: %d\n", min) }
+END {
+    printf ("Part 1: %d\n", min1)
+    printf ("Part 2: %d\n", min2)
+}
 
