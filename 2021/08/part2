@@ -133,6 +133,13 @@ BEGIN {
     split($1, digits, " ")
     split($2, output, " ")
 
+    for(i = 1; i <= 4; i++) {
+        length(output[i]) == 2 && answer1++
+        length(output[i]) == 4 && answer1++
+        length(output[i]) == 3 && answer1++
+        length(output[i]) == 7 && answer1++
+    }
+
     # Sort 10 digit input by length so we can access
     # each one based on the digit it must be or its length
     asort(digits, digits, "cmp_len")
@@ -195,8 +202,11 @@ BEGIN {
     value += 1000 * int(get_value(decode(output[1], key)))
 
     # Add to the answer
-    answer += value
+    answer2 += value
     # exit
 }
 
-END { printf("Answer = %d\n", answer) }
+END {
+    printf("Part 1: %d\n", answer1)
+    printf("Part 2: %d\n", answer2)
+}
