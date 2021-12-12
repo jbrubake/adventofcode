@@ -1,0 +1,165 @@
+#!/usr/bin/awk -f
+
+function add_grids(a, g,    x, y) {
+    for (y = 1; y < ROWS-1; y++) {
+        for (x = 1; x < WIDTH-1; x++) {
+            if (g[WIDTH*y+x] == FLASHED) continue
+            g[WIDTH*y+x] += a[WIDTH*y+x]
+        }
+    }
+}
+
+function do_flashes(a, i,    x, y, list) {
+    # I couldn't find a better way to un-flatten the array
+    for (y = 0; y < ROWS; y++)
+        for (x = 0; x < WIDTH; x++)
+            if (i == WIDTH*y+x) {
+                # Make a list of all the adjacent bulbs
+                list["nw"] = WIDTH*(y-1) + (x-1)
+                list["n"]  = WIDTH*(y-1) + (x+0)
+                list["ne"] = WIDTH*(y-1) + (x+1)
+                list["w"]  = WIDTH*(y+0) + (x-1)
+                list["e"]  = WIDTH*(y+0) + (x+1)
+                list["sw"] = WIDTH*(y+1) + (x-1)
+                list["s"]  = WIDTH*(y+1) + (x+0)
+                list["se"] = WIDTH*(y+1) + (x+1)
+                }
+
+    # Increment all adjacent bulbs
+    for (i in list)
+        if (a[list[i]] != EDGE)
+            a[list[i]]++
+}
+
+function get_flashes(g, f,    x, y, i) {
+    # This needs zeroed out first and its easier to do
+    # it here than the multiple places it needs done elsewhere
+    for (i in f)
+        delete f[i]
+
+    i = 0 # return the number of flashes
+    for (y = 1; y < ROWS-1; y++) {
+        for (x = 1; x < WIDTH-1; x++) {
+            if (int(g[WIDTH*y+x]) >= FLASH) {
+                f[++i] = WIDTH*y+x
+            }
+        }
+    }
+
+    return i
+}
+
+BEGIN {
+    ROWS = 0
+    # Bulb markers
+    EDGE = "E"
+    FLASHED = "F"
+    # Bulbs flash at >= this value
+    FLASH = 10
+    count = 0
+
+    # Default STEPS (use -v <steps> to change)
+    if (!STEPS)
+        STEPS = 100
+}
+
+# Get width of grid from first line and set
+# the top of the bounding box
+NR == 1 {
+    WIDTH = length($0) + 2
+    for (i = 0; i < WIDTH; i++)
+        grid[i] = EDGE
+    ROWS++
+}
+
+{
+    # Split each line into an array and bound
+    # it on either side
+    #
+    # Lots of weirdness with awk arrays
+    # I couldn't seem to make this work with
+    # just looping over $0 = EDGE $0 EDGE
+    grid[WIDTH*ROWS] = EDGE
+    for (x = 1; x < WIDTH; x++)
+        grid[WIDTH*ROWS+x] = substr($0, x, 1)
+    grid[WIDTH*ROWS+WIDTH-1] = EDGE
+    ROWS++
+}
+
+END {
+    # Add the last row of the bounding box
+    for (x = 0; x < WIDTH; x++)
+        grid[WIDTH*ROWS+x] = EDGE
+    ROWS++
+
+    # Number of bulbs in the grid
+    NUM_BULBS = (WIDTH-2)*(ROWS-2)
+
+    # Exit the loop later if we have both answers
+    for (step = 1;;) {
+        # Increment everything
+        for (y = 1; y < ROWS-1; y++)
+            for (x = 1; x < WIDTH - 1; x++)
+                grid[WIDTH*y+x]++
+
+        # While there is at least one bulb that flashed
+        while (get_flashes(grid, flashes)) {
+            # Create the parallel grid from scratch each time
+            # so it is properly zeroed and bounded
+            for (x = 0; x < WIDTH+2; x++) {
+                grid_add[x] = EDGE
+                grid_add[WIDTH*ROWS+x] = EDGE
+            }
+            for (y = 1; y < ROWS-1; y++) {
+                grid_add[WIDTH*y] = EDGE
+                grid_add[WIDTH*(y+1)-1] = EDGE
+                for (x = 1; x < WIDTH; x++) {
+                    grid_add[WIDTH*y+x] = 0
+                }
+            }
+
+            for (i in flashes) {
+                count++
+                # Mark that each bulb flashed this round
+                grid[flashes[i]] = FLASHED
+                # Increment all adjacent bulbs in a parallel grid
+                # This properly counts the effect of all bulbs that flashed
+                # without having to save additional states to avoid over
+                # or under counting
+                do_flashes(grid_add, flashes[i])
+            }
+
+            # add parallel grid to real grid to flash more bulbs
+            add_grids(grid_add, grid)
+        }
+
+        # Part 1 is the count after STEPS steps
+        if (step == STEPS)
+            part1 = count
+
+        # Reset all FLASHED to 0 and count flashes this step
+        step_flashes = 0
+        for (y = 1; y < ROWS-1; y++) {
+            for (x = 1; x < WIDTH-1; x++) {
+                if (grid[WIDTH*y+x] == FLASHED) {
+                    grid[WIDTH*y+x] = 0
+                    step_flashes++
+                }
+            }
+        }
+
+        # Part2 is the step when all bulbs flashed
+        if (step_flashes == NUM_BULBS)
+            part2 = step
+
+        # Finish once we have both answers
+        if (part1 && part2)
+            break
+
+        # Next step
+        step++
+    }
+
+    printf("Part 1: %s\n", part1)
+    printf("Part 2: %s\n", part2)
+}
