@@ -1,0 +1,83 @@
+#!/usr/bin/awk -f
+
+function count_stars(g,    x, y) {
+    for (y = 0; y <= ROWS; y++)
+        for (x = 0; x <= COLS; x++)
+            if (g[y][x] == "#") count++
+    return count
+}
+
+function fold_grid(g, f,    t, x, y) {
+    split(f, t, /=/)
+    axis = t[1]
+    coord = t[2]
+
+    if (axis == "x") {
+        for (y = 0; y <= ROWS; y++) {
+            for (x = coord+1; x <= COLS; x++) {
+                if (grid[y][x] == "#")
+                    grid[y][coord-(x-coord)] = "#"
+            }
+        }
+        COLS = coord-1        
+    } else if (axis == "y") {
+        for (y = coord+1; y <= ROWS; y++) {
+            for (x = 0; x <= COLS; x++) {
+                if (grid[y][x] == "#")
+                    grid[coord-(y-coord)][x] = "#"
+            }
+        }
+        ROWS = coord-1        
+
+    } else printf("WTF?!")
+}
+
+function print_grid(g,    x, y) {
+    for (y = 0; y <= ROWS; y++) {
+        for (x = 0; x <= COLS; x++) {
+            if (g[y][x] == "#")
+                printf("# ")
+            else if (g[y][x] == "R")
+                printf ("R ")
+            else
+                printf(". ")
+        }
+        print ""
+    }
+}
+
+BEGIN {
+    FS = ","
+    ROWS = 0
+    COLS = 0
+    delete FOLDS
+}
+
+/^$/ { FS = " " }
+
+FS == "," {
+    if ($1 > COLS)
+        COLS = $1
+    if ($2 > ROWS)
+        ROWS = $2
+
+    grid[$2][$1] = "#"
+}
+
+FS == " " {
+    if ($0 == "") next
+
+    FOLDS[length(FOLDS)] = $3
+}
+
+END {
+    for (i in FOLDS) {
+        fold_grid(grid, FOLDS[i])
+        if (i == 0)
+            part1 = count_stars(grid)
+    }
+
+    printf("Part 1: %s\n", part1)
+    printf("Part 2:\n")
+    print_grid(grid)
+}
