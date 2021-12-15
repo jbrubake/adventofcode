@@ -1,0 +1,107 @@
+#!/usr/bin/awk -f
+
+function already_visited(n,    i, tmp, count, twice_already) {
+    # Sort the stack to make finding duplicates easier
+    asort(STACK, tmp)
+    # Determine if another node has already been visited twice,
+    last = ""
+    for (i in tmp) {
+        # Skip big caves
+        if (tmp[i] ~ /[A-Z]/) continue
+
+        # See if current == last (this is why it's sorted)
+        if (tmp[i] == last) {
+            twice_already = 1
+            break
+        }
+        last = tmp[i]
+    }
+
+    # Determine how many times n has been visited
+    for (i in tmp) {
+        if (tmp[i] ~ /^[A-Z]/) continue
+        if (tmp[i] == n) count++
+    }
+
+    # If n has been visited once and we already have a little
+    # cave visited twice, we can't visit n again
+    if (count == 1 && twice_already == 1)
+        return 1
+    # If n has already been visited twice, then we can't visit it again
+    else if (count == 2)
+        return 1
+    # Otherwise we can visit n again
+    else
+        return 0
+}
+
+function traverse (map, node,    i, t, edges) {
+    split(map[node], edges, /,/)
+    for (i in edges) {
+        # Don't go back to the beginning
+        if (edges[i] == START) continue
+
+        # At the end
+        if (edges[i] == FINISH) {
+            PATHS++
+            continue
+        }
+
+        # Ignore already visited little caves
+        if (edges[i] ~ /[a-z]/ && already_visited(edges[i])) continue
+
+        # Traverse this node
+        STACK[length(STACK)] = edges[i]
+        traverse(map, edges[i])
+        delete STACK[length(STACK)-1]
+    }
+}
+
+function print_map(m,    i, j) {
+    for (i in m) {
+        delete t
+        split(m[i], t, /,/)
+        for (j in t)
+            printf("%s: %s\n", i, t[j])
+    }
+}
+
+BEGIN {
+    FS = "-"
+
+    START = "START"
+    FINISH = "END"
+    PATHS = 0
+
+    delete STACK
+}
+
+{
+    if ($1 == "start") $1 = START
+    if ($2 == "start") $2 = START
+    if ($1 == "end")   $1 = FINISH
+    if ($2 == "end")   $2 = FINISH
+
+    if (length(map[$1])) sep = ","; else sep = ""
+    map[$1] = map[$1] sep $2
+
+    if (length(map[$2])) sep = ","; else sep = ""
+    map[$2] = map[$2] sep $1
+}
+
+END {
+    for (i in map) {
+        split(map[i], tmp, /,/)
+        delete map[i]
+        asort(tmp)
+        for (j in tmp) {
+            if (length(map[i])) sep = ","; else sep = ""
+            map[i] = map[i] sep tmp[j]
+        }
+    }
+
+    STACK[length(STACK)] = START
+    traverse(map, START)
+
+    printf("Part 2: %s\n", PATHS)
+}
