@@ -54,8 +54,8 @@ for (;;) {
     
     # FIXME: Last kart doesn't get to move, so I had to calculate final move
     # FIXME: manually
-    say "$RAILS[$KARTS[0]->{y}]->[$KARTS[0]->{x}]";
-    say "$KARTS[0]->{dir}";
+    # say "$RAILS[$KARTS[0]->{y}]->[$KARTS[0]->{x}]";
+    # say "$KARTS[0]->{dir}";
         exit;
     }
 }
