@@ -1,0 +1,54 @@
+#!/usr/bin/awk -f
+
+BEGIN {
+    if (!STEPS)
+        STEPS = 10
+} 
+
+NR == 1 {
+    polymer = $0
+    next
+}
+
+$0 ~ /^$/ { next }
+
+{ rule[$1] = tolower($3) }
+
+END {
+    print polymer
+    for (i in rule)
+        printf("Insert %s between %s\n", rule[i], i)
+    print ""
+
+    for (s = 1; s <= STEPS; s++) {
+        for (i in rule) {
+            c1 = substr(i, 1, 1)
+            c2 = substr(i, 2, 1)
+            # Need to run this twice because of the way gsub works
+            # It was not doing two substitutions when there were three
+            # identical characters in a row (which was interesting)
+            gsub(i, c1 rule[i] c2, polymer)
+            gsub(i, c1 rule[i] c2, polymer)
+        }
+        polymer = toupper(polymer)
+        # printf("Step %s: %s (length %s)\n", s, polymer, length(polymer))
+        print s
+    }
+
+
+    letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+    for (i = 1; i <= length(letters); i++)
+        count[substr(letters, i, 1)] = gsub(substr(letters, i, 1), "", polymer)
+
+    for (i in count)
+        if (count[i] == 0) delete count[i]
+
+    for (i in count)
+        printf("%s found %s times\n", i, count[i])
+
+    n = asort(count)
+    printf("Part 1: %d\n", count[n] - count[1])
+
+}
+
