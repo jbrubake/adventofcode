@@ -1,0 +1,47 @@
+#!/usr/bin/awk -f
+
+function find_initial_path(g,    x, y, r) {
+print ""
+    for (y = 2; y <= ROWS; y++)
+        r += int(substr(g[y], 1, 1))
+
+    for (x = 2; x <= WIDTH; x++)
+        r += int(substr(g[ROWS], x, 1))
+
+    return r
+}
+
+function find_path(g,    path, x, y, i) {
+
+
+    return "foo"
+}
+
+function print_grid(g,    i) {
+    for (i in g)
+        print(g[i])
+}
+
+BEGIN  {
+    WIDTH = 0
+    ROWS  = 0
+}
+
+WIDTH == 0 { WIDTH = length($0) }
+
+{
+    grid[++ROWS] = $0
+}
+
+END {
+    MIN_RISK = 9 * WIDTH * ROWS
+
+    print_grid(grid)
+    print ""
+    # risk = find_initial_path(grid)
+    # print risk
+
+    MIN_RISK = find_path(grid, 0, 0)
+
+    printf("Part 1: %s\n", MIN_RISK)
+}
