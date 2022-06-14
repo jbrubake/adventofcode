@@ -1,0 +1,84 @@
+#!/usr/bin/awk -f
+
+function build_chain(p, rules,    i) {
+    for (i in rules) {
+        c1 = substr(i, 1, 1)
+        c2 = substr(i, 2, 1)
+        # Need to run this twice because of the way gsub works
+        # It was not doing two substitutions when there were three
+        # identical characters in a row (which was interesting)
+        gsub(i, c1 rules[i] c2, p)
+        gsub(i, c1 rules[i] c2, p)
+    }
+    return toupper(p)
+}
+
+function find_solution(chain, pair, pairs,    p) {
+    for (p in pairs) {
+        if (p == pair) continue
+        # printf("Find %s in %s\n", p, substr(chain, 2, length(chain)-2))
+        if (match(substr(chain, 2, length(chain)-2), p))
+            return p
+    }
+    return ""
+}
+
+BEGIN {
+    if (!STEPS)
+        STEPS = 10
+
+    SOLUTIONS = "sol"
+} 
+
+NR == 1 {
+    polymer = $0
+    next
+}
+
+$0 ~ /^$/ { next }
+
+{ rules[$1] = tolower($3) }
+
+END {
+    print polymer
+    # for (i in rules)
+        # printf("Insert %s between %s\n", rules[i], i)
+    # print ""
+
+    for (i = 1; i <= length(polymer) - 1; i++) {
+        pairs[substr(polymer, i, 2)][0] = substr(polymer, i, 2)
+    }
+
+    for (p in pairs) {
+        # p = "CB"
+        pairs[p][SOLUTIONS] = ""
+        printf("Pair %s", p)
+        for (s = 1; pairs[p][SOLUTIONS] == ""; s++) {
+            pairs[p][s] = build_chain(pairs[p][s-1], rules)    
+            pairs[p][s] = pairs[p][s]
+            sol = find_solution(pairs[p][s], p, pairs)
+            if (sol != "") {
+                printf(" solves to %s on step %s\n", sol, s)
+                pairs[p][SOLUTIONS] = pairs[p][SOLUTIONS] "," n ":" sol
+            }
+        }
+    }
+exit
+
+    #
+    # Count how many of each letter there are
+    #
+# TODO: the internal pair separators need to be counted properly (they appear in two pairs each
+    letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    for (i = 1; i <= length(letters); i++)
+        count[substr(letters, i, 1)] = gsub(substr(letters, i, 1), "", polymer)
+
+    # Ignore letters with no occurences
+    for (i in count)
+        if (count[i] == 0) delete count[i]
+
+    n = asort(count)
+    printf("Part 1: %d\n", count[n] - count[1])
+
+}
+
