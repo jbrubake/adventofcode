@@ -1,0 +1,83 @@
+#!/usr/bin/awk -f
+
+BEGIN {
+    part1 = 0
+    for(i = 0; i < 256; i++)
+        ord[sprintf("%c", i)] = i
+
+    part2 = 0
+    m = 1
+    GROUP_SIZE = 3
+}
+
+function chartonum(c) {
+    if(ord[c] > ord["Z"])
+        return ord[c] - ord["a"] + 1
+    else
+        return ord[c] - ord["A"] + 27
+}
+
+# Part 1
+{
+    split($0, s, //)
+
+    for(i = 1; i <= length(s)/2; i++){
+        s1[s[i]]++
+        s2[s[i+length(s)/2]]++
+    }
+
+    for(k in s1)
+        if(k in s2)
+            part1 += chartonum(k)
+
+    delete s
+    delete s1
+    delete s2
+}
+
+# Part 2
+m <= GROUP_SIZE {
+    print m ": " $0
+
+    group[m] = $0
+    m++
+}
+
+m > GROUP_SIZE {
+    print "processing"
+
+    split(group[1], s1, //)
+    for(i = 1; i <= length(s1); i++)
+        s1c[s1[i]]++
+    split(group[2], s2, //)
+    for(i = 1; i <= length(s2); i++)
+        s2c[s2[i]]++
+    split(group[3], s3, //)
+    for(i = 1; i <= length(s3); i++)
+        s3c[s3[i]]++
+
+    for(k in s1c)
+        if((k in s2c) && (k in s3c)){
+            print k
+            part2 += chartonum(k)
+        }
+
+    # Reset
+    for(i = 1; i <= GROUP_SIZZE; i++)
+        delete group[i]
+
+    delete s1
+    delete s2
+    delete s3
+    delete s1c
+    delete s2c
+    delete s3c
+
+    m = 1
+}
+
+END {
+    print "Part 1: " part1
+    print "Part 2: " part2
+}
+
