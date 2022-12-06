@@ -1,0 +1,48 @@
+#!/usr/bin/awk -f
+
+/^$/ || /^ [[:digit:]]/ {
+    next
+}
+
+/^\[/ || /^ / {
+    gsub(/[\[\]]/, "")
+    gsub(/    /, "x")
+    gsub(/ /, "")
+
+    for(i = 1; i <= length($0); i++) {
+        if(substr($0, i, 1) == "x") {
+            continue
+        } else {
+            part1_stack[i] = part1_stack[i] substr($0, i, 1)
+            part2_stack[i] = part2_stack[i] substr($0, i, 1)
+        }
+    }
+}
+
+/^move/ {
+    n = $2
+    src = $4
+    dst = $6
+
+    for(i = 1; i <= n; i++) {
+        c = substr(part1_stack[src], 1, 1)
+        part1_stack[src] = substr(part1_stack[src], 2)
+        part1_stack[dst] = c part1_stack[dst]
+    }
+
+    c = substr(part2_stack[src], 1, n)
+    part2_stack[src] = substr(part2_stack[src], 1+n)
+    part2_stack[dst] = c part2_stack[dst]
+}
+
+END {
+
+    for(k in part1_stack)
+        part1 = part1 substr(part1_stack[k], 1, 1)
+
+    for(k in part2_stack)
+        part2 = part2 substr(part2_stack[k], 1, 1)
+
+    print "Part 1: " part1
+    print "Part 2: " part2
+}
