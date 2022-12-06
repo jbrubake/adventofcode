@@ -1,0 +1,40 @@
+#!/bin/awk -f
+
+BEGIN {
+    n = 3
+    total = 0
+    for(i = 0; i < n; i++)
+        highest[i] = 0
+}
+
+/^$/ {
+    check_highest(total)
+    total = 0
+}
+
+// {
+    total += $1
+}
+
+END {
+    # In case the input doesn't end with a newline
+    check_highest(total)
+
+    print "Part 1: " highest[n-1]
+
+    for(i = 0; i < n; i++)
+        part2 += highest[i]
+    print "Part 2: " part2
+}
+
+function check_highest(total) {
+    for(i = n-1; i >= 0; i--){
+        if(total > highest[i]){
+            for(j = 0; j < i; j++){
+                highest[j] = highest[j+1]
+            }
+            highest[i] = total
+            break
+        }
+    }
+}
