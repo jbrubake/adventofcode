@@ -1,0 +1,61 @@
+#!/bin/awk -f
+
+BEGIN { part1 = 0; part2 = 0 }
+
+function get_result(play) {
+    # Win: 0
+    # Loss: 6
+    # Draw: 3
+         if (play == "A X") result = 3
+    else if (play == "A Y") result = 6
+    else if (play == "A Z") result = 0
+    else if (play == "B X") result = 0
+    else if (play == "B Y") result = 3
+    else if (play == "B Z") result = 6
+    else if (play == "C X") result = 6
+    else if (play == "C Y") result = 0
+    else if (play == "C Z") result = 3
+
+    return result
+}
+
+function get_play_value(p) {
+    switch (p) {
+    case "X": return 1; break
+    case "Y": return 2; break
+    case "Z": return 3; break
+    }
+}
+
+function choose_play(play) {
+    # Opponent: Z/X/Y
+    #        A: Y/Z/X
+    #        B: Z/X/Y
+    #        C: X/Y/Z
+         if (play == "A X") result = "Z"
+    else if (play == "A Y") result = "X"
+    else if (play == "A Z") result = "Y"
+    else if (play == "B X") result = "X"
+    else if (play == "B Y") result = "Y"
+    else if (play == "B Z") result = "Z"
+    else if (play == "C X") result = "Y"
+    else if (play == "C Y") result = "Z"
+    else if (play == "C Z") result = "X"
+
+    return result
+}
+
+{
+    part1 += get_play_value($2)
+    part1 += get_result($0)
+
+    play = choose_play($0)
+    part2 += get_play_value(play)
+    part2 += get_result($1" "play)
+}
+
+END {
+    print "Part 1: " part1
+    print "Part 2: " part2
+}
+
