@@ -1,0 +1,37 @@
+#!/usr/bin/awk -f
+
+function isunique(str,    i) {
+    split(str, s, //)
+    asort(s)
+    for(i = 1; i <= length(s)-1; i++) {
+        if(s[i] == s[i+1])
+            return 0
+    }
+    return 1
+}
+
+{
+    part1_len = 4
+    part2_len = 14
+
+    if(!part1)
+        for(i = 1; i <= length($0)-part1_len+1; i++) {
+            if(isunique(substr($0, i, part1_len))) {
+                part1 = i+part1_len-1
+                break
+            }
+        }
+
+    if(!part2)
+        for(i = 1; i <= length($0)-part2_len+1; i++) {
+            if(isunique(substr($0, i, part2_len))) {
+                part2 = i+part2_len-1
+                break
+            }
+        }
+}
+
+END {
+    print "Part 1: " part1
+    print "Part 2: " part2
+}
