@@ -1,29 +1,25 @@
 #!/usr/bin/perl
 
-use strict;
-use warnings;
-use v5.10;
-
 use List::Util qw(min);
 
-my $polymer = <>;
+$polymer = <>;
 chomp $polymer;
 
-say "Part 1: " . reduce ($polymer);
+print "Part 1: " . reduce ($polymer) . "\n";
 
-my $short_len = length $polymer;
+$short_len = length $polymer;
 foreach my $c ('a'..'z'){
-    my $p = $polymer;
+    $p = $polymer;
 
     $p =~ s/$c//g;
     $p =~ s/\U$c//g;
 
     $short_len = min ($short_len, reduce($p));
 }
-say "Part 2: $short_len";
+print "Part 2: $short_len\n";
 
 sub reduce {
-    my $polymer = shift;
+    my $polymer= shift;
 
     while (1) {
         my $change = 0;
@@ -38,5 +34,4 @@ sub reduce {
 
     return length $polymer;
 }
-
 
