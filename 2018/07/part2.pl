@@ -75,4 +75,5 @@ while (keys %reqs) {
     $total_time++;
 }
 
-say $total_time-1;
+say $total_time-2;
+
