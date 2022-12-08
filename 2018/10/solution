@@ -1,8 +1,7 @@
 #!/usr/bin/perl
 
-use strict;
+# use strict;
 use warnings;
-use v5.10;
 
 use List::Util qw(min max);
 
@@ -19,13 +18,22 @@ while (<>) {
 
 my $s = 0;
 while () {
-    print_msg (@points);
+    # Only print the starfield if the stars are contained
+    # in a box the height of a standard terminal window
+    if (box_height (@points) <= 25) {
+        print_msg (0, 2, @points);
+        system "tput cup 0 0";
+        print "Part 2: $s\n";
+        sleep 1;
+    }
+    $s++;
+
     for my $p (@points) {
         $p = move_point ($p);
     }
-    say $s;
-    $s++;
 }
+
+endwin;
 
 sub move_point {
     my $p = shift;
@@ -39,21 +47,24 @@ sub move_point {
 }
 
 sub print_msg {
-    my @points = @_;
+    my $x = shift;
+    my $y = shift;
 
-    my ($min_x, $min_y, $max_x, $max_y) = get_bounds (@points);
+    my ($min_x, $min_y) = get_bounds (@_);
 
-    if ($max_x - $min_x > 100) {
-        return;
-    }
-    sleep 1;
     system "tput clear";
     for my $p (@points) {
-        my $x = ($p->{'x'} - $min_x);
-        my $y = ($p->{'y'} - $min_y);
+        my $x = ($p->{'x'} - $min_x) + $x;
+        my $y = ($p->{'y'} - $min_y) + $y;
         system "tput cup $y $x";
         print "#";
     }
+}
+
+sub box_height {
+    my ($min_x, $min_y, $max_x, $max_y) = get_bounds (@_);
+
+    return $max_y - $min_y;
 }
 
 sub get_bounds {
@@ -75,3 +86,4 @@ sub get_bounds {
 
     return ($min_x, $min_y, $max_x, $max_y);
 }
+
