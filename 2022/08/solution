@@ -1,0 +1,88 @@
+#!/usr/bin/awk -f
+
+function scenic_score(g, y, x,  here, up, down, left, right) {
+    here = substr(g[y], x, 1)
+
+    for(r = y-1; r >= 1; r--) {
+        up++
+        if(here <= substr(g[r], x, 1))
+            break
+    }
+    for(r = y+1; r <= height; r++) {
+        down++
+        if(here <= substr(g[r], x, 1))
+            break
+    }
+    for(c = x-1; c >= 1; c--) {
+        left++
+        if(here <= substr(g[y], c, 1))
+            break
+    }
+    for(c = x+1; c <= width; c++) {
+        right++
+        if(here <= substr(g[y], c, 1))
+            break
+    }
+
+    return up * down * left * right
+}
+
+function is_visible(g, y, x,    here, block_up, block_down, block_left, block_right) {
+    here = substr(g[y], x, 1)
+
+    for(r = y-1; r >= 1; r--)
+        if(here <= substr(g[r], x, 1)) {
+            block_up = 1
+            break
+        }
+    for(r = y+1; r <= height; r++)
+        if(here <= substr(g[r], x, 1)) {
+            block_down = 1
+            break
+        }
+    for(c = x-1; c >= 1; c--)
+        if(here <= substr(g[y], c, 1)) {
+            block_left = 1
+            break
+        }
+    for(c = x+1; c <= width; c++)
+        if(here <= substr(g[y], c, 1)) {
+            block_right = 1
+            break
+        }
+
+    if(block_up && block_down && block_left && block_right)
+        return 0
+    else
+        return 1
+}
+
+{
+    height++
+    trees[height] = $0
+}
+
+END {
+    width = length(trees[1])
+    for(row in trees)
+        for(col = 1; col <= width; col++) {
+            score = scenic_score(trees, row, col)
+            if(score >= part2)
+                part2 = score
+
+            # Part 1 can skip all the edges
+            if(col == 1 || col == width || row == 1 || row == height)
+                continue
+
+            t = substr(trees[row], col, 1)
+            # printf("row %d, col %d = %d\n", row, col, substr(trees[row], col, 1))
+            if(is_visible(trees, row, col))
+               part1++
+        }
+
+    part1 += 2*width
+    part1 += 2*(height-2) # Don't double count the corners
+
+    print "Part 1: " part1
+    print "Part 2: " part2
+}
