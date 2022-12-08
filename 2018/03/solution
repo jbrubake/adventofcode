@@ -1,0 +1,47 @@
+#!/usr/bin/perl
+
+$MAXSIZE = 1000;
+
+@input = <>;
+
+for ($x = 0; $x < $MAXSIZE; $x++) {
+    for ($y = 0; $y < $MAXSIZE; $y++) {
+        $fabric[$x][$y] = '.';
+    }
+}
+
+for (@input) {
+    ($id, $lo, $to, $wi, $he) = parse ($_);
+
+    $intact[$id] = 1;
+
+    for ($y = $to; $y < $to+$he; $y++) {
+        for ($x = $lo; $x < $lo+$wi; $x++) {
+            if ($fabric[$x][$y] eq '.') {
+                $fabric[$x][$y] = $id;
+            } else {
+                $intact[$fabric[$x][$y]] = 0;
+                $intact[$id] = 0;
+                $fabric[$x][$y] = 'X' ;
+            }
+        }
+    }
+}
+
+for ($y = 0; $y < $MAXSIZE; $y++) {
+    for ($x = 0; $x < $MAXSIZE; $x++) {
+        $overlap++ if ($fabric[$x][$y] eq 'X');
+    }
+}
+
+print "Part 1: $overlap\n";
+
+for ($i = 0; $i <= $#intact; $i++){
+    print "Part 2: $i\n" and exit if ($intact[$i] == 1);
+}
+
+sub parse {
+    shift =~ /#(\d+)\s*@\s*(\d+)+,\s*(\d+)\s*:\s*(\d+)x(\d+)/;
+    return $1, $2, $3, $4, $5;
+}
+
