@@ -1,0 +1,79 @@
+#!/usr/bin/perl
+
+use List::Util qw(min max);
+
+my $i = 1;
+
+# Populate grid
+while (<>) {
+    chomp;
+    ($x, $y) = split ", ";
+
+    $grid[$y][$x]    = $i; # Populate grid
+    $points{"$x,$y"} = $i; # Save point
+    $i++;
+}
+
+# Determine dimensions of grid
+for $y (0..$#grid){
+    $max_x = max($max_x, $#{$grid[$y]});
+}
+$max_y = $#grid;
+
+for $y (0..$max_y){
+    for $x (0..$max_x){
+        $part2_d = 0;
+        $min_d = $max_x; # suitable starting value
+        $min_point;
+        for $point (keys %points){
+            ($px, $py) = split ',', $point;
+            # Get distance to each point
+            $part1_d = abs($px-$x) + abs($py-$y);
+            # Get the sum of distances to each point
+            $part2_d += abs($x-$px) + abs($y-$py);
+            if ($part1_d == $min_d) {
+                $min_point = ".";
+            }elsif ($part1_d < $min_d) {
+                $min_d = $part1_d;
+                $min_point = "$px,$py";
+            }
+        }
+        $part1_distances[$y][$x] = $points{$min_point};
+        $part2_distances[$y][$x] = $part2_d;
+    }
+}
+
+for $y (0..$max_y){
+    for $x (0..$max_x){
+        # Count number of occurences
+        $count{$part1_distances[$y][$x]}++;
+        # Count number of locations with distance < 10000
+        $part2++ if($part2_distances[$y][$x] < 10000);
+    }
+}
+
+# Eliminate infinite areas from column 1
+for $y (0..$max_y){
+    $key = $part1_distances[$y][0];
+    delete $count{$key};
+}
+# Eliminate infinite areas from last column
+for $y (0..$max_y){
+    $key = $part1_distances[$y][$max_x];
+    delete $count{$key};
+}
+# Eliminate infinite areas from row 1
+for $x (0..$max_x){
+    $key = $part1_distances[0][$x];
+    delete $count{$key};
+}
+# Eliminate infinite areas from last row
+for $x (0..$max_x){
+    $key = $part1_distances[$max_y][$x];
+    delete $count{$key};
+}
+
+$part1 = max values %count;
+print "Part 1: $part1\n";
+print "Part 2: $part2\n";
+
