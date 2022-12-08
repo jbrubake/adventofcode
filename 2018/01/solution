@@ -1,0 +1,16 @@
+#!/usr/bin/perl
+
+while(<>) {
+    $part1 += $_;
+    push @input, $_;
+}
+print "Part 1: $part1\n";
+
+while() {
+    foreach (@input) {
+        $freq += $_;
+        print "Part 2: $freq\n" and exit if (exists $found{$freq});
+        $found{$freq} = 1;
+    }
+}
+
