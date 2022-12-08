@@ -1,10 +1,8 @@
 #!/usr/bin/perl
-use Data::Dumper qw(Dumper);
 
 # Split entries apart
-my @entries;
 while (<>) {
-    my ($yr, $mo, $dd, $hh, $mm, $log) = parse ($_);
+    ($yr, $mo, $dd, $hh, $mm, $log) = parse ($_);
 
     # Hash separate timestamp data and log entry
     push @entries, {
@@ -18,7 +16,7 @@ while (<>) {
 }
 
 # Sort entries
-my @sorted_entries = sort {
+@sorted_entries = sort {
     $a->{'yr'} <=> $b->{'yr'} ||
     $a->{'mo'} <=> $b->{'mo'} ||
     $a->{'dd'} <=> $b->{'dd'} ||
@@ -26,19 +24,16 @@ my @sorted_entries = sort {
     $a->{'mm'} <=> $b->{'mm'}
 } @entries;
 
-my $guard;
 foreach (@sorted_entries) {
-    my $yr = $_->{'yr'};
-    my $mo = $_->{'mo'};
-    my $dd = $_->{'dd'};
-    my $hh = $_->{'hh'};
-    my $mm = $_->{'mm'};
-    my $log = $_->{'log'};
+    $yr = $_->{'yr'};
+    $mo = $_->{'mo'};
+    $dd = $_->{'dd'};
+    $hh = $_->{'hh'};
+    $mm = $_->{'mm'};
+    $log = $_->{'log'};
 
     # New guard on shift
-    if ($log =~ /Guard #(\d+) begins shift/) {
-        $guard = $1;
-    }
+    $guard = $1 if ($log =~ /Guard #(\d+) begins shift/);
 
     $dtg = "$yr$mo$dd";
 
@@ -46,21 +41,14 @@ foreach (@sorted_entries) {
     next if ($hh ne "00");
 
     # Mark wake up/fall asleep times
-    if ($log =~ /wakes up/) {
-        $guard_sched{$guard}{$dtg}[$mm] = 'wake';
-    }
-    if ($log =~ /falls asleep/) {
-        $guard_sched{$guard}{$dtg}[$mm] = 'sleep';
-    }
+    $guard_sched{$guard}{$dtg}[$mm] = 'wake' if ($log =~ /wakes up/);
+    $guard_sched{$guard}{$dtg}[$mm] = 'sleep' if ($log =~ /falls asleep/);
 }
 
-my $awake = 'yes';
-# print "\t\t\t000000000011111111112222222222333333333344444444445555555555\n";
-# print "\t\t\t012345678901234567890123456789012345678901234567890123456789\n";
+$awake = 'yes';
 foreach my $guard (sort keys %guard_sched) {
     foreach my $dtg (sort keys %{ $guard_sched{$guard} }) {
-        # print "$dtg\t$guard\t";
-        for (my $i = 0; $i < 60; $i++) {
+        for ($i = 0; $i < 60; $i++) {
             # Toggle sleep/wake
             if ($guard_sched{$guard}{$dtg}[$i] eq 'wake') {
                 $awake = 'yes';
@@ -71,49 +59,50 @@ foreach my $guard (sort keys %guard_sched) {
             # Save sleep/wake markers
             if ($awake eq 'no') {
                 $guard_sched{$guard}{$dtg}[$i] = 1;
-                # print "#";
             } else {
                 $guard_sched{$guard}{$dtg}[$i] = 0;
-                # print " ";
             }
         }
-        # print "\n";
     }
 }
 
 # Sum guard asleep times
-my %guard_awake_count;
-my %min_totals;
 foreach my $guard (sort keys %guard_sched) {
     foreach my $dtg (sort keys %{ $guard_sched{$guard} }) {
-        for (my $i = 0; $i < 60; $i++) {
+        for ($i = 0; $i < 60; $i++) {
             if ($guard_sched{$guard}{$dtg}[$i] == 1) {
                 $guard_awake_count{$guard} += 1;
                 $min_totals{$guard}[$i] += 1;
             }
         }
     }
-    # print "$guard slept for $guard_awake_count{$guard}\n";
 }
-my @guards = sort { $guard_awake_count{$a} <=> $guard_awake_count{$b} } keys %guard_awake_count;
-# print "$guards[-1]\n";
+@guards = sort { $guard_awake_count{$a} <=> $guard_awake_count{$b} } keys %guard_awake_count;
 
-my $max;
-my $result;
-for (my $i = 0; $i < 60; $i++) {
+for ($i = 0; $i < 60; $i++) {
     $test= $min_totals{$guards[-1]}[$i];
-    if ($test> $max) {
+    if ($test > $max) {
         $max= $test;
         $result = $i
     }
 }
-# print "$result\n";
 
-print $guards[-1] * $result;
-print "\n";
+print "Part 1: " . $guards[-1] * $result . "\n";
 
-# Initial parser
+for ($i = 0; $i < 60; $i++) {
+    foreach my $guard (keys %guard_sched) {
+        next if (!$min_totals{$guard}[$i]);
+        if ($min_totals{$guard}[$i] > $max_time) {
+            $max_time = $min_totals{$guard}[$i];
+            $max_min = $i;
+            $high_guard = $guard;
+        }
+    }
+}
+print "Part 2: " . $high_guard * $max_min . "\n";
+
 sub parse () {
-    $_[0] =~ /\[(....)\-(..)\-(..) (..):(..)\] (.*)/;
+    shift =~ /\[(....)\-(..)\-(..) (..):(..)\] (.*)/;
     return $1, $2, $3, $4, $5, $6
 }
+
