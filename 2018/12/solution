@@ -1,0 +1,50 @@
+#!/usr/bin/perl
+
+$PART1_MIN = 20;
+$CONVERGE_MIN = 200;
+$PART2_CYCLES = 50000000000;
+
+$_ = <>;
+chomp;
+s/[^#.]+//;
+@pots = split '', $_;
+
+while (<>) {
+    next if ($_ eq "\n");
+    chomp;
+    /(.*) => (.*)/;
+    $rules{$1} = $2;
+}
+
+# Add extra pots to the either side
+for my $i (1..200) {
+    unshift @pots, '.';
+    push @pots, '.';
+}
+
+for my $g (1..$CONVERGE_MIN) {
+    @new_pots = @pots;
+
+    for my $i (2..($#pots-2)) {
+        $k = join '', @pots[($i-2)..($i+2)];
+        $r = $rules{$k};
+        $new_pots[$i] = $r;
+    }
+    @pots = @new_pots;
+
+    $sum = 0;
+    for (my $i = 0; $i <= $#pots; $i++) {
+        $sum += $i - 200 if ($pots[$i] eq '#');
+    }
+    $SCORES[$g] = $sum;
+
+    last if ($prev_diff == $sum - $prev);
+    $prev_diff = $sum - $prev;
+    $prev = $sum;
+}
+
+$ans = ($PART2_CYCLES - $#SCORES) * $prev_diff + $SCORES[$#SCORES];
+
+print "Part 1: $SCORES[$PART1_MIN]\n";
+print "Part 2: $ans\n";
+
