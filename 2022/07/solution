@@ -1,0 +1,56 @@
+#!/usr/bin/awk -f
+
+function cd(dst, pwd) {
+    switch(dst) {
+    case "/":
+        pwd = "root"
+        break
+    case "..":
+        sub(/\/[^/]*$/, "", pwd)
+        break
+    default:
+        pwd = pwd "/" dst
+        break
+    }
+
+    return pwd
+}
+
+BEGIN {
+    delete paths
+
+    MAX    = 70000000
+    NEEDED = 30000000
+}
+
+/^\$ cd/ {
+    pwd = cd($3, pwd)
+    paths[pwd] = 1
+}
+
+/^\$ ls/ || /^dir/ { }
+
+{ tree[pwd] += $1 }
+
+END {
+    # Add up parent and all children
+    for(p in tree)
+        for(d in tree)
+            if(match(d, p))
+                sizes[p] += tree[d]
+
+    for(d in sizes)
+        if(sizes[d] <= 100000)
+            part1 += sizes[d]
+
+    to_delete = NEEDED - MAX + sizes["root"]
+    part2 = MAX
+
+    for(d in sizes)
+        if(sizes[d] >= to_delete)
+            if(sizes[d] < part2)
+                part2 = sizes[d]
+
+    print "Part 1: " part1
+    print "Part 2: " part2
+}
