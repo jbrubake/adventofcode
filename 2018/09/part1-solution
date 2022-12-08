@@ -35,7 +35,7 @@ MARBLE: while () {
         $marble_val++;
     }
 }
-print "Part 1: " . max (@players) . "\n";
+print "Final score: " . max (@players) . "\n";
 
 sub insert_cw {
     my $i = shift;
