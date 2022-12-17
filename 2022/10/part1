@@ -1,0 +1,33 @@
+#!/usr/bin/awk -f
+
+{ x = clk % WIDTH }
+
+$1 == "noop" {
+    clk++
+    if (clk == 20 || (clk-20) % WIDTH == 0)
+        part1 += clk * rx
+}
+
+$1 == "addx" {
+    clk++
+    if (clk == 20 || (clk-20) % WIDTH == 0)
+        part1 += clk * rx
+    clk++
+    if (clk == 20 || (clk-20) % WIDTH == 0)
+        part1 += clk * rx
+    rx += $2
+}
+
+# New row every WIDTH cycles
+(clk % WIDTH) + 1 == 1 { row++ }
+
+BEGIN {
+    WIDTH = 40
+    rx = 1
+    row = 0
+}
+
+END {
+    print "Part 1: " part1
+}
+

@@ -1,0 +1,47 @@
+#!/usr/bin/awk -f
+
+function draw_pixel(x, rx) {
+    if (x == rx-1 || x == rx || x == rx+1)
+        printf("#")
+    else
+        printf(".")
+}
+
+$1 == "noop" { clk_adj = 1 }
+$1 == "addx" { clk_adj = 2 }
+
+{
+    # Run each clock cycle
+    for(; clk_adj > 0; clk_adj--) {
+        clk++
+        # Calculate Part 1 stuff
+        if (clk == 20 || (clk-20) % WIDTH == 0) {
+            part1 += clk * rx
+        }
+
+        # Get cursor position
+        x = (clk-1) % WIDTH
+        # Draw the current pixel 
+        draw_pixel(x, rx)
+        # New row every WIDTH cycles
+        if ((clk % WIDTH) + 1 == 1)
+            print ""
+    }
+
+    # Execute completed instruction
+    switch ($1) {
+    case "addx":
+        rx += $2
+    }
+}
+
+
+BEGIN {
+    WIDTH = 40
+    rx = 1
+}
+
+END {
+    print "Part 1: " part1
+}
+
