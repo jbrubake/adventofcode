@@ -1,0 +1,97 @@
+#!/usr/bin/awk -f
+
+function move_knot(tail, head,    hx, hy, tx, ty, t, dx, dy) {
+    # Extract tail coordinates
+    split(tail, t, /,/)
+    tx = t[1]
+    ty = t[2]
+
+    # Extract head coordinates
+    split(head, t, /,/)
+    hx = t[1]
+    hy = t[2]
+
+    dy = hy - ty
+    dx = hx - tx
+
+    # Head is right of tail by 2+
+    if (dx > 1) {
+        tx++
+        # Adjust for diagonal
+        if (dy > 0) ty++
+        else if (dy < 0) ty--
+    # Head is left of tail by 2+
+    } else if (dx < -1) {
+        tx--
+        # Adjust for diagonal
+        if (dy > 0) ty++
+        else if (dy < 0) ty--
+    # Head is below tail by 2+
+    } else if (dy > 1) {
+        ty++
+        # Adjust for diagonal
+        if (dx > 0) tx++
+        else if (dx < 0) tx--
+    # Head is above tail by 2+
+    } else if (dy < -1) {
+        ty--
+        # Adjust for diagonal
+        if (dx > 0) tx++
+        else if (dx < 0) tx--
+    }
+
+    return tx "," ty
+}
+
+function move_head(head, direction,    hx, hy) {
+    # Extract head coordinates
+    split(knots[0], h, /,/)
+    hx = h[1]
+    hy = h[2]
+
+    # Move head one step
+    switch (direction) {
+    case "U":
+        hy--
+        break
+    case "D":
+        hy++
+        break
+    case "L":
+        hx--
+        break
+    case "R":
+        hx++
+        break
+    }
+
+    return hx "," hy
+}
+
+BEGIN {
+    NUM_KNOTS = 10
+
+    for(i = 0; i < NUM_KNOTS; i++)
+        knots[i] = "0,0"
+}
+
+{
+    for(i = $2; i > 0; i--) {
+        # Move head one step
+        knots[0] = move_head(knots[0], $1)
+
+        # Move each tail
+        for(j = 1; j < NUM_KNOTS; j++) {
+            # Move tail
+            knots[j] = move_knot(knots[j], knots[j-1])
+            # Set visited
+            visited[j][knots[j]]++
+        }
+    }
+
+}
+
+END {
+    print "Part 1: " length(visited[1])
+    print "Part 2: " length(visited[NUM_KNOTS-1])
+}
