@@ -1,0 +1,103 @@
+#!/usr/bin/awk -f
+
+function do_rounds(rounds, part,    r, test, item, op) {
+    # Part 2: Use Chinese Remainder Theorem to keep numbers small
+    if(part == 2) {
+        test = 1
+        for(m in tests)
+            test *= tests[m]
+    }
+
+    for(r = 1; r <= rounds; r++) {
+        printf("%d.", r)
+        for(m in items) {
+            while(item = read(items[m])) {
+                count[m]++
+
+                # Calculate new worry level
+                op = ops[m]
+                op = gensub(/old/, item, "g", op)
+                item = eval(op)
+
+                # Decrease worry level due to boredom
+                if(part == 1)
+                    item = int(item / 3)
+                # Calculate new worry level using Chinese Remainder Theorem
+                else
+                    item = item % test
+
+                # Check test
+                if (item % tests[m] == 0)
+                    write(item, items[true[m]])
+                else
+                    write(item, items[false[m]])
+            }
+        }
+    }
+}
+
+function eval(s,    cmd, line, r) {
+    cmd = "awk \047BEGIN{print " s"; exit}\047"
+    if ((cmd | getline line) > 0)
+        r = line
+    close(cmd)
+    return r
+}
+
+function read(f,    r) {
+    r = f[1] # Save the first item
+    # Shift remaining items
+    for(i = 1; i < length(f); i++)
+        f[i] = f[i+1]
+    # Delete last item (which has been shifted)
+    delete f[length(f)]
+
+    return r
+}
+
+function write(a, f) { f[length(f)+1] = a }
+
+BEGIN {
+    monkey = -1 # Indexing starts at 0
+    PART1_ROUNDS = 20
+    PART2_ROUNDS = 10000
+}
+
+
+/Starting items/ {
+    sub(/.*: /, "")   # Get just the items
+    gsub(/,/, "")     # Delete the commas
+    split($0, t, / /) # Split the item list
+    for(k in t) {     # Copy the item list into the master list
+        items[monkey][k] = t[k]
+        items_part2[monkey][k] = t[k] # Save a copy for part 2
+    }
+}
+
+/Monkey/    { monkey++ }
+/Operation/ { ops[monkey]   = gensub(/.*= /, "", 1) }
+/Test/      { tests[monkey] = $4 }
+/If true/   { true[monkey]  = $6 }
+/If false/  { false[monkey] = $6 }
+
+END {
+    do_rounds(PART1_ROUNDS, 1) # Run all the rounds
+    asort(count)               # Sort each monkey's count
+    part1 = count[length(count)] * count[length(count)-1]
+
+    # Delete previous calculations and restore original
+    # item list
+    delete count
+    delete items
+    for(m in items_part2)
+        for(i in items_part2[m])
+            items[m][i] = items_part2[m][i]
+
+    do_rounds(PART2_ROUNDS, 2) # Run all the rounds
+    asort(count)               # Sort each monkey's count
+    part2 = count[length(count)] * count[length(count)-1]
+
+    print "Part 1: " part1
+    print "Part 2: " part2
+}
+
