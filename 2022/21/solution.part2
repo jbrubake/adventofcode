@@ -1,0 +1,89 @@
+#!/usr/bin/awk -f
+
+function eval(s,    cmd, line, r) {
+    cmd = "bc -l <<< \"" s "\""
+    if ((cmd | getline line) > 0)
+        r = line
+    close(cmd)
+    print r
+    return r
+}
+
+function do_monkey(monkey, monkeys,    m1, m2, m1val, m2val, op, t) {
+    task = monkeys[monkey]
+    # print "in " monkey " doing " task
+
+    if(monkey == "humn") {
+        val = monkey
+    } else if(task ~ /[0-9]+/) {
+        val = task
+    } else {
+        split(task, t, / /)
+        m1 = t[1]
+        op = t[2]
+        m2 = t[3]
+
+        m1val = do_monkey(m1, monkeys)
+        # print "return left to " monkey " from " m1 " and got " m1val
+        m2val = do_monkey(m2, monkeys)
+        # print "return right to " monkey " from " m2 " and got " m2val
+
+        if(m1val ~ "humn" || m2val ~ "humn") {
+            val = "(" m1val " " op " " m2val ")"
+        } else {
+            switch (op) {
+                case "+":
+                    val = m1val + m2val
+                    break
+                case "-":
+                    val = m1val - m2val
+                    break
+                case "*":
+                    val = m1val * m2val
+                    break
+                case "/":
+                    val = m1val / m2val
+                    break
+            }
+        }
+    }
+
+    monkeys[monkey] = val
+    # print ">> set " monkey " = " val
+    return val
+}
+
+{
+    $1 = gensub(/:/, "", 1, $1)
+    monkeys[$1] = gensub(/[^ ]+ /, "", 1) 
+}
+
+END {
+    # Get the two halves of the root monkey
+    split(gensub(/.*: /, "", 1, monkeys["root"]), t, / . /)
+    delete monkeys["root"]
+    m1 = t[1]
+    m2 = t[2]
+
+    do_monkey(m1, monkeys)
+    do_monkey(m2, monkeys)
+
+    m1eqn = monkeys[m1]
+    m2eqn = monkeys[m2]
+
+    # Starting at humn = 0 works but is SLOW
+    # So I cheated and did a binary search to
+    # get close :-D
+    humn = 3087390115720
+    while(1) {
+        if(eval(gensub(/humn/, humn, "g", m1eqn)) == \
+           eval(gensub(/humn/, humn, "g", m2eqn)))
+            break
+        else
+            humn++
+        print ""
+    }
+    part2 = humn
+
+    print "Part 2: " part2
+}

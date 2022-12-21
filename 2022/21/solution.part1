@@ -1,0 +1,49 @@
+#!/usr/bin/awk -f
+
+function do_monkey(monkey, monkeys,    m1, m2, m1val, m2val, op, t) {
+    task = monkeys[monkey]
+
+    if(task ~ /[0-9]+/) {
+        val = task
+    } else {
+        split(task, t, / /)
+        m1 = t[1]
+        op = t[2]
+        m2 = t[3]
+
+        m1val = do_monkey(m1, monkeys)
+        m2val = do_monkey(m2, monkeys)
+
+        switch (op) {
+            case "+":
+                val = m1val + m2val
+                break
+            case "-":
+                val = m1val - m2val
+                break
+            case "*":
+                val = m1val * m2val
+                break
+            case "/":
+                val = m1val / m2val
+                break
+        }
+    }
+
+    monkeys[monkey] = val
+    return val
+}
+
+{
+    $1 = gensub(/:/, "", 1, $1)
+    monkeys[$1] = gensub(/[^ ]+ /, "", 1) 
+}
+
+END {
+    for(k in monkeys)
+        monkeys_orig[k] = monkeys[k]
+
+    part1 = do_monkey("root", monkeys)
+
+    print "Part 1: " part1
+}
