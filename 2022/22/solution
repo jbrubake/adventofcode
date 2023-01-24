@@ -1,0 +1,132 @@
+#!/usr/bin/awk -f
+
+/^$/ { next }
+/^[0-9UDLR]/ {
+    # Tokenize the directions
+    # Initial facing is UP so a direction of R makes it work
+    directions = "R " gensub(/([UDLR])/, " \\1 ", "g") " "
+    next
+}
+
+{ map[length(map)+1] = $0 }
+
+BEGIN { delete map[0] }
+
+function token(s,    c) {
+    c = match(s, / /)
+    return substr(s, 1, c-1)
+}
+
+function del_token(s) {
+    sub(/[^ ]* /, "", s)
+    return s
+}
+
+function find_start(s,    x) {
+    return match(s, /\./)
+}
+
+function turn(f, d) {
+    switch (d) {
+        case "R": f++; break;
+        case "L": f--; break;
+    }
+
+    # Wrap
+    if(f == 4) f = 0
+    else if(f == -1) f = 0
+
+    return f
+}
+
+function move(pos, dir, dist, map,    f, x, y, t, dx, dy, c, i) {
+    split(pos, t, / /)
+    f = t[1]
+    x = t[2]
+    y = t[3]
+
+    f = turn(f, dir)
+
+    dx = dy = 0
+    # E = 0
+    # S = 1
+    # W = 2
+    # N = 3
+    switch (f) {
+        case 3: dy = -1; break;
+        case 0: dx = 1; break;
+        case 1: dy = 1; break;
+        case 2: dx = -1; break;
+    }
+
+    for(; dist > 0; dist--) {
+        # print x " " y
+        c = substr(map[y+dy], x+dx, 1)
+        if(c == ".") { # Open
+            x += dx
+            y += dy
+        } else if(c == "#") { # Wall
+            break
+        } else { # Wrap
+            if(dx == 1) {
+                i = match(map[y], /[^ ]/)
+                if(substr(map[y], i, 1) == "#")
+                    break
+                else
+                    x = i
+            } else if (dx == -1) {
+                for(i = length(map[y]); substr(map[y], i, 1) == " "; i--)
+                    ;
+                if(substr(map[y], i, 1) == "#")
+                    break
+                else
+                    x = i
+            } else if (dy == 1) {
+                for(i = 1; substr(map[i], x, 1) == " "; i++)
+                    ;
+                if(substr(map[i], x, 1) == "#")
+                   break
+                else
+                    y = i
+            } else if (dy == -1) {
+                for(i = length(map); substr(map[i], x, 1) == " "; i--)
+                    ;
+                if(substr(map[i], x, 1) == "#")
+                   break
+                else
+                    y = i
+            }
+        }
+    }
+    return f " " x " " y
+}
+
+END {
+    for(k in map)
+        print map[k]
+    print directions
+    print ""
+
+    y = 1
+    x = find_start(map[y])
+    pos = "3 " x " " y # Initial facing is North
+
+    print "     F X Y > dir dist"
+    printf("cur: 0 %s %s > ", x, y)
+    while(length(directions)) {
+        dir = token(directions)
+        directions = del_token(directions)
+        dist = token(directions)
+        directions = del_token(directions)
+        print dir " " dist
+        pos = move(pos, dir, dist, map)
+        printf("     %s > ", pos)
+    }
+    print ""
+    print pos
+
+    split(pos, part1, / /)
+
+    print "Part 1: " part1[1] + 4*part1[2] + 1000*part1[3]
+}
+
