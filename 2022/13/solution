@@ -1,0 +1,95 @@
+#!/usr/bin/awk -f
+
+function min(a, b) { return a < b ? a : b }
+function max(a, b) { return a > b ? a : b }
+
+function get_token(s,    c) {
+    c = match(s, / /)
+    return substr(s, 1, c-1)
+}
+
+function del_token(s) {
+    sub(/[^ ]* /, "", s)
+    return s
+}
+
+function tokenize(s) {
+    sub(/^\[/, "", s)
+    gsub(/,/, " ", s)
+    gsub(/\[/, "[ ", s)
+    gsub(/]/, " ]", s)
+    gsub(/ +/, " ", s) # Squash spaces
+
+    return s " " # Append a space so the tokenizer works
+}
+
+# Return:
+#  0 if equal
+#  -1 if a < b
+#  1 if a > b
+function cmp(a, b,    order, ta, tb) {
+    # print "cmp " a "<>" b
+
+    order = 0
+   
+    while(1) {
+        # Get next token and remove it
+        ta = get_token(a)
+        tb = get_token(b)
+        a = del_token(a)
+        b = del_token(b)
+
+        # print "   tokens: " ta "<>" tb
+        # print "   top:    " a
+        # print "   bottom: " b
+        # print ""
+
+        # a ran out of items first
+        if(ta == "]" && tb != "]") { order = -1; break }
+        # b ran out of items first
+        if(ta != "]" && tb == "]") { order = 1; break }
+
+        # Convert integer to list
+        else if(ta == "[" && tb != "[") {
+            b = tb " ] " b
+            return cmp(a, b)
+        } else if(ta != "[" && tb == "[") {
+            a = ta " ] " a
+            return cmp(a, b)
+        }
+
+        # Basic integer comparison
+        else if(ta > tb) { order = 1; break }
+        else if(ta < tb) { order = -1; break }
+
+        # Both lists are empty
+        else if(a == "" && b == "") break
+    }
+    
+    return order
+}
+
+BEGIN {
+    RS = ""
+}
+
+{
+    pair++
+    # Tokenize the string
+    $1 = tokenize($1)
+    $2 = tokenize($2)
+
+    print $1
+    print $2
+    r = cmp($1, $2)
+    print "# pair " pair ": " r
+    if(r <= 0) {
+        part1 += pair
+    }
+
+    print ""
+}
+
+END {
+    print "Part 1: " part1
+}
