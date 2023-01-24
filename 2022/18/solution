@@ -1,0 +1,40 @@
+#!/usr/bin/awk -f
+
+function get_free_sides(points, point,    p, coord, x, y, z, xx, yy, zz, sides, dist) {
+    # Extract coordinates
+    split(point, coord, /,/)
+    x = coord[1]
+    y = coord[2]
+    z = coord[3]
+
+    sides = 6
+
+    for(p in points) {
+        # Extract coordinates
+        split(p, coord, /,/)
+        xx = coord[1]
+        yy = coord[2]
+        zz = coord[3]
+
+        # If distance between points == 1 then they touch
+        dist = sqrt((xx-x)^2 + (yy-y)^2 + (zz-z)^2)
+        if(dist == 1)
+            sides--
+    }
+
+    return sides
+}
+
+BEGIN {
+    FS = ","
+    delete lava[0]
+}
+
+{ lava[$0] = 1}
+
+END {
+    for(p in lava)
+        part1 += get_free_sides(lava, p)
+
+    print "Part 1: " part1
+}
